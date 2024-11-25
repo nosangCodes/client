@@ -5,7 +5,7 @@ type Props = {}
 
 export default function page({ }: Props) {
     return (
-        <div className='bg-card shadow-md rounded-md p-4 min-h-[500px]'>
+        <div className='p-4 h-full w-full'>
             <NewMenu />
         </div>
     )
