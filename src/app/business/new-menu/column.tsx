@@ -22,8 +22,12 @@ export default function Column({ color, cards, column, title, setCards }: Props)
 
     const filteredCards = cards.filter((card) => card.column === column)
 
-    const handleDragStart = (e: React.DragEvent<HTMLDivElement>, id: number) => {
-        e.dataTransfer.setData("cardId", String(id))
+    const handleDragStart = (e: React.DragEvent<HTMLDivElement> | MouseEvent | TouchEvent | PointerEvent, id: number) => {
+        //@ts-ignore
+        if (e.dataTransfer) {
+            //@ts-ignore
+            e.dataTransfer.setData("cardId", String(id))
+        }
     }
     const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
         e.preventDefault()
@@ -80,7 +84,6 @@ export default function Column({ color, cards, column, title, setCards }: Props)
         setActive(false)
         clearHighlights()
         const cardId = e.dataTransfer.getData("cardId")
-        console.log("🚀 ~ handleDragEnd ~ cardId:", cardId)
         const indicators = getIndicators();
         const { element, offset } = getNearestIndicators(e, indicators)
         const before = element.dataset.before || "-1"
@@ -106,7 +109,7 @@ export default function Column({ color, cards, column, title, setCards }: Props)
     }
     return (
         <>
-            <div draggable={true} className='w-60 shrink-0 bg-white p-3 cursor-grab active:cursor-grabbing'>
+            <div draggable={true} className={cn('w-60 shrink-0 bg-white p-3 transition-colors cursor-grab active:cursor-grabbing', active && " bg-neutral-400/20")}>
                 <div className='flex mb-2 flex-row items-center justify-between'>
                     {
                         editName ?
@@ -130,14 +133,13 @@ export default function Column({ color, cards, column, title, setCards }: Props)
                     onDragOver={handleDragOver}
                     onDragLeave={handleDragLeave}
                     onDrop={handleDragEnd}
-                    className={cn('w-full h-full transition-colors rounded-sm', !title && "mt-10", active && " bg-neutral-400/20")}>
+                    className={cn('w-full h-full transition-colors rounded-sm', !title && "mt-10",)}>
                     {
                         filteredCards.map((item) => (
                             <Card key={item.id} {...item} handleDragStart={handleDragStart} />
                         ))
                     }
                     <DropIndicator beforeId={-1} column={column} />
-
                     <motion.button onClick={() => setOpenAddModal(true)} layout className='flex items-center my-2 gap-0.5 text-neutral-900/80 hover:text-neutral-900 text-sm'><span>Add Item</span> <Plus className='size-4' /></motion.button>
                 </div>
             </div>
@@ -146,11 +148,11 @@ export default function Column({ color, cards, column, title, setCards }: Props)
     )
 }
 function Card({ column, description, id, name, price, handleDragStart }: MenuItemValues & {
-    handleDragStart: (e: React.DragEvent<HTMLDivElement>, cardId: number) => void
+    handleDragStart: (e: React.DragEvent<HTMLDivElement> | MouseEvent | TouchEvent | PointerEvent, cardId: number) => void
 }) {
     return <>
         <DropIndicator beforeId={id} column={column} />
-        <motion.div layout layoutId={String(id)} draggable={true} onDragStart={(event) => handleDragStart(event, id)} className='cursor-grab active:cursor-grabbing rounded-sm p-3 border border-neutral-400 bg-neutral-50'>
+        <motion.div layout layoutId={String(id)} draggable={true} onDragStart={(event) => handleDragStart(event, id)} className='cursor-grab active:cursor-grabbing rounded-sm p-3 border border-neutral-400 bg-white'>
             <p className='text-sm font-semibold text-neutral-900'>{name}</p>
             <p className='text-xs mt-0.5'>{description}</p>
             <p className='text-xs'>${Number(price).toFixed(2)}</p>

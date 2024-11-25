@@ -37,8 +37,8 @@ export default function NewMenu({ }: Props) {
   const hadnleAddNewCategory = () => {
     setCategories((prev) => ([
       ...prev, {
-        color: "", 
-        column: "new", 
+        color: "",
+        column: "new",
         title: "New"
       }
     ]))
@@ -51,9 +51,7 @@ export default function NewMenu({ }: Props) {
         <Label>Menu Name</Label>
         <Input placeholder='eg: Jenny&apos;s Bakery' />
       </form>
-      <div className='mt-2 flex flex-col'>
-        <Button onClick={hadnleAddNewCategory}>Add new column</Button>
-      </div>
+      <Button className='mt-4' onClick={hadnleAddNewCategory}>Add new column</Button>
       <Board columns={categories} />
     </div>
   )
