@@ -91,10 +91,6 @@ export default function Column({  cards, id, name, setCards }: Props) {
         mutation.mutate({
             columnIdToMoveTo: id,
             itemIdToMove: parseInt(cardId),
-        }, {
-            onSuccess: () => {
-
-            }
         })
 
         // if (before !== cardId) {

@@ -2,7 +2,7 @@ import { toast } from "@/hooks/use-toast";
 import kyInstance from "@/lib/ky-instance";
 import { menuItem } from "@/lib/validations";
 import { Column, CreateColumn, CreateMenuItem, MenuItem } from "@/utils/types";
-import { QueryFilters, useMutation, useQueryClient } from "@tanstack/react-query";
+import { QueryFilters, QueryKey, useMutation, useQueryClient } from "@tanstack/react-query";
 
 export function useAddItemMutation(){
     const queryClient = useQueryClient();
@@ -134,6 +134,7 @@ export function useDeleteItemMutation(){
 
 export function useMoveItemMutation(){
     const queryClient = useQueryClient();
+    const queryKey: QueryKey = ["menu-items"]
     const mutation = useMutation({
         mutationKey: ["menu-items"],
         mutationFn: ( {columnIdToMoveTo, itemIdToMove}:{itemIdToMove: number, columnIdToMoveTo: number}) => kyInstance.patch("api/business/move-item", {
@@ -145,32 +146,28 @@ export function useMoveItemMutation(){
                 columnId: columnIdToMoveTo
               }
         }).json<MenuItem>(),
-        onSuccess: async(updatedItem) => {
-            const queryFilter = {
-                queryKey: ["menu-items"],
-            } satisfies QueryFilters
-            
-            await queryClient.cancelQueries(queryFilter);
+        onMutate: async({columnIdToMoveTo, itemIdToMove}) => {
+            await queryClient.cancelQueries({queryKey});
+            const previousState = queryClient.getQueryData<Array<MenuItem>>(queryKey);
 
-            queryClient.setQueriesData<Array<MenuItem>>(queryFilter, (oldData) => {
-                if(oldData){
-                    const update = oldData.filter((item) => item.itemId !== updatedItem.itemId)
-                    update.push(updatedItem)
-                    return [
-                        ...update
-                    ]
-                }
-            })
-            queryClient.invalidateQueries({
-                queryKey: ["menu-items"],
-                exact: true, // Only invalidate the specific "albums" query
-              });
+             // Optimistically update the cache
+            queryClient.setQueryData<MenuItem[]>(
+                ["menu-items"],
+                (oldData) =>
+                oldData?.map((item) =>
+                    item.itemId === itemIdToMove
+                    ? { ...item, columnId: columnIdToMoveTo } // Update the item column ID
+                    : item
+                ) || []
+            );
+            return {previousState}
         },
-        onError: (error) => {
-            console.error("Error moving item", error); // Helpful for debugging
+        onError(error, variables, context) {
+            queryClient.setQueryData(queryKey, context?.previousState);
+            console.error(error);
             toast({
               variant: "destructive",
-              description: "Failed to move item, please try again.",
+              description: "Something went wrong! Please try again.",
             });
           },
     })
