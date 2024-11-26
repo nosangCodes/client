@@ -6,15 +6,15 @@ export const menuItem = z.object({
     id: z.number(),
     name: requiredString,
     description: requiredString,
-    column: requiredString,
     price: z.coerce.number().min(0, "Price must be a positive number").refine(value => value !== null || value !== "", "Price is required")
 })
 export const createMenuItem = z.object({
     name: requiredString,
     description: requiredString,
-    column: requiredString,
     price: z.coerce.number().min(0, "Price must be a positive number").refine(value => value !== null || value !== "", "Price is required")
 })
+
+export type CreateMenuItemValues = z.infer<typeof createMenuItem>
 
 export type MenuItemValues = z.infer<typeof menuItem>
 

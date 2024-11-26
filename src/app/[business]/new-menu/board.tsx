@@ -1,30 +1,41 @@
 import { items } from '@/lib/data'
 import React, { useState } from 'react'
-import Column from './column'
 import { MenuItemValues } from '@/lib/validations'
 import { Flame, Trash } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { Column as ColumnType, MenuItem } from '@/utils/types'
+import Column from './column'
+import { useQuery } from '@tanstack/react-query'
+import kyInstance from '@/lib/ky-instance'
 
 type Props = {
-    columns: {
-        column: string;
-        title: string;
-        color: string;
-    }[]
+    columns: Array<ColumnType>,
+    menuId: number
 }
 
-export default function Board({ columns }: Props) {
-    const [cards, setCards] = useState<Array<MenuItemValues>>(
-        items
-    )
+export default function Board({ columns, menuId }: Props) {
+    const { data, status, isFetching} = useQuery({
+        queryKey: ["menu-items"],
+        queryFn: () => kyInstance.get(`api/business/menu/${menuId}/items`).json<Array<MenuItem>>()
+    })
+    const cards = data ?? []
+
+    if(status === "pending"){
+        return <p>Loading...</p>
+      }
+      if(status === "error"){
+        return <p className='text-destructive'>Error occured</p>
+      }
+    
+
     return (
         <div className='h-full w-full flex p-3 overflow-scroll'>
             {
                 columns.map((column) => (
-                    <Column setCards={setCards} key={column.column} cards={cards} {...column} />
+                    <Column key={column.id} cards={cards} {...column} />
                 ))
             }
-            <DeleteZone className='ml-4' setCards={setCards} />
+            <DeleteZone className='ml-4' />
         </div>
     )
 }

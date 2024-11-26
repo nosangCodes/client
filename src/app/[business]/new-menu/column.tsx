@@ -6,21 +6,19 @@ import AddItem from './add-item'
 import { Pen, Plus, Save } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Input } from '@/components/ui/input'
+import {Column as ColumnType, MenuItem} from "@/utils/types"
 
 type Props = {
-    title: string,
-    column: string,
-    color: string,
-    cards: Array<MenuItemValues>
-    setCards: React.Dispatch<React.SetStateAction<Array<MenuItemValues>>>
-}
+    cards: Array<MenuItem>
+    setCards?: React.Dispatch<React.SetStateAction<Array<MenuItemValues>>>
+} & ColumnType
 
-export default function Column({ color, cards, column, title, setCards }: Props) {
+export default function Column({  cards, id, name, setCards }: Props) {
     const [openAddModal, setOpenAddModal] = useState(false)
     const [editName, setEditName] = useState(false)
     const [active, setActive] = useState(false)
 
-    const filteredCards = cards.filter((card) => card.column === column)
+    const filteredCards = cards.filter((card) => card.columnId === id)
 
     const handleDragStart = (e: React.DragEvent<HTMLDivElement> | MouseEvent | TouchEvent | PointerEvent, id: number) => {
         //@ts-ignore
@@ -114,10 +112,10 @@ export default function Column({ color, cards, column, title, setCards }: Props)
                     {
                         editName ?
                             <form>
-                                <Input autoFocus value={title} className='py-1' />
+                                <Input autoFocus value={name} className='py-1' />
                             </form>
                             :
-                            <h3 className={`font-semibold text-[${color}]`}>{title}</h3>
+                            <h3 className={`font-semibold`}>{name}</h3>
                     }
                     {
                         editName ? <button onClick={() => setEditName(false)}>
@@ -133,29 +131,29 @@ export default function Column({ color, cards, column, title, setCards }: Props)
                     onDragOver={handleDragOver}
                     onDragLeave={handleDragLeave}
                     onDrop={handleDragEnd}
-                    className={cn('w-full h-full transition-colors rounded-sm', !title && "mt-10",)}>
+                    className={cn('w-full h-full transition-colors rounded-sm', !name && "mt-10",)}>
                     {
                         filteredCards.map((item) => (
-                            <Card key={item.id} {...item} handleDragStart={handleDragStart} />
+                            <Card key={item.itemId} {...item} handleDragStart={handleDragStart} />
                         ))
                     }
-                    <DropIndicator beforeId={-1} column={column} />
+                    <DropIndicator beforeId={-1} column={String(id)} />
                     <motion.button onClick={() => setOpenAddModal(true)} layout className='flex items-center my-2 gap-0.5 text-neutral-900/80 hover:text-neutral-900 text-sm'><span>Add Item</span> <Plus className='size-4' /></motion.button>
                 </div>
             </div>
-            <AddItem column={column} setCards={setCards} open={openAddModal} onClose={() => setOpenAddModal(false)} />
+            <AddItem column={name} columnId={id} open={openAddModal} onClose={() => setOpenAddModal(false)} />
         </>
     )
 }
-function Card({ column, description, id, name, price, handleDragStart }: MenuItemValues & {
+function Card({ columnId, itemId, itemDescription, itemName, itemPrice, handleDragStart }: MenuItem & {
     handleDragStart: (e: React.DragEvent<HTMLDivElement> | MouseEvent | TouchEvent | PointerEvent, cardId: number) => void
 }) {
     return <>
-        <DropIndicator beforeId={id} column={column} />
-        <motion.div layout layoutId={String(id)} draggable={true} onDragStart={(event) => handleDragStart(event, id)} className='cursor-grab active:cursor-grabbing rounded-sm p-3 border border-neutral-400 bg-white'>
-            <p className='text-sm font-semibold text-neutral-900'>{name}</p>
-            <p className='text-xs mt-0.5'>{description}</p>
-            <p className='text-xs'>${Number(price).toFixed(2)}</p>
+        <DropIndicator beforeId={itemId} column={String(columnId)} />
+        <motion.div layout layoutId={String(itemId)} draggable={true} onDragStart={(event) => handleDragStart(event, itemId)} className='cursor-grab active:cursor-grabbing rounded-sm p-3 border border-neutral-400 bg-white'>
+            <p className='text-sm font-semibold text-neutral-900'>{itemName}</p>
+            <p className='text-xs mt-0.5'>{itemDescription}</p>
+            <p className='text-xs'>${Number(itemPrice).toFixed(2)}</p>
         </motion.div>
     </>
 }
