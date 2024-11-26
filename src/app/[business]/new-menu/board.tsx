@@ -10,7 +10,7 @@ import kyInstance from '@/lib/ky-instance'
 
 type Props = {
     columns: Array<ColumnType>,
-    menuId: number
+    menuId: string
 }
 
 export default function Board({ columns, menuId }: Props) {

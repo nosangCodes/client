@@ -8,6 +8,7 @@ import useDebounce from '@/hooks/use-debounce'
 import kyInstance from '@/lib/ky-instance'
 import { Column, Menu } from '@/utils/types'
 import { useQuery } from '@tanstack/react-query'
+import { useAddColumnMutation } from '../[menuId]/muration'
 type Props = {
   menuId: string
 }
@@ -21,16 +22,23 @@ export default function NewMenu({ menuId}: Props) {
 
   const columns = data ?? []
 
- 
-  // const hadnleAddNewCategory = () => {
-  //   setCategories((prev) => ([
-  //     ...prev, {
-  //       color: "",
-  //       column: "new",
-  //       title: "New"
-  //     }
-  //   ]))
-  // }
+  const mutation = useAddColumnMutation();
+
+  const hadnleAddNewColumn = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    const form = e.currentTarget;
+    const formData = new FormData(form);
+    const name = formData.get("name")?.toString();
+    if(!name) return;
+    mutation.mutate({
+      name,
+      menuId: Number(menuId),
+    }, {
+      onSuccess: () => {
+        form.reset()
+      }
+   })
+  }
 
   useEffect(() => {
     if(menuId){
@@ -70,7 +78,11 @@ export default function NewMenu({ menuId}: Props) {
     <div className='h-screen w-full'>
       <Label>Menu Name</Label>
       <Input ref={inputRef} value={menuName} onChange={(e) => setMenuName(e.target.value)} placeholder='eg: Jenny&apos;s Bakery' />
-      {/* <Button className='mt-4' onClick={hadnleAddNewCategory}>Add new column</Button> */}
+        <hr className='my-2' />
+      <form onSubmit={hadnleAddNewColumn} className='flex mt-3 gap-2 flex-row items-center'>
+          <Input name='name' required placeholder='Column name' />
+          <Button>Add new column</Button>
+      </form>
       <Board menuId={menuId} columns={columns} />
     </div>
   )

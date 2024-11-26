@@ -40,3 +40,8 @@ export interface CreateMenuItem {
     "price": number,
     "columnId": number
 }
+
+export interface CreateColumn {
+    "name": string,
+    "menuId": number
+}
