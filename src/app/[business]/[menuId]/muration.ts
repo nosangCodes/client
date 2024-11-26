@@ -174,3 +174,40 @@ export function useMoveItemMutation(){
 
     return mutation
 }
+
+export function useDeleteColumnMutation() {
+    const queryClient = useQueryClient();
+    const queryKey: QueryKey = ["columns"];
+  
+    const mutation = useMutation({
+      mutationKey: queryKey,
+      mutationFn: (columnId: number) =>
+        kyInstance.delete(`api/business/column/${columnId}`).json<{ id: number }>(),
+      onSuccess: async ({ id: columnId }) => {
+        console.log("on success", columnId)
+        // Cancel ongoing queries related to the key
+        await queryClient.cancelQueries({queryKey});
+  
+        // Update cache by removing the deleted column
+        queryClient.setQueriesData<Array<Column>>({queryKey}, (oldData) => {
+            console.log("old data", oldData)
+          if (Array.isArray(oldData)) {
+            return oldData.filter((column) => column.id !== columnId);
+          }
+          return oldData; // Return as-is if data isn't an array
+        });
+  
+        // Invalidate the queries to refetch fresh data
+        queryClient.invalidateQueries({queryKey});
+      },
+      onError: (error) => {
+        console.error("Error deleting column:", error); // Log for debugging
+        toast({
+          variant: "destructive",
+          description: "Failed to delete column, please try again.",
+        });
+      },
+    });
+  
+    return mutation;
+  }

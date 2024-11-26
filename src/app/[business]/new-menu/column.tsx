@@ -8,13 +8,14 @@ import { cn } from '@/lib/utils'
 import { Input } from '@/components/ui/input'
 import {Column as ColumnType, MenuItem} from "@/utils/types"
 import { useMoveItemMutation } from '../[menuId]/muration'
+import ColumnActions from './column-actions'
 
 type Props = {
     cards: Array<MenuItem>
     setCards?: React.Dispatch<React.SetStateAction<Array<MenuItemValues>>>
 } & ColumnType
 
-export default function Column({  cards, id, name, setCards }: Props) {
+export default function Column({  cards, id, name, setCards, menuId }: Props) {
     const [openAddModal, setOpenAddModal] = useState(false)
     const [editName, setEditName] = useState(false)
     const [active, setActive] = useState(false)
@@ -126,7 +127,11 @@ export default function Column({  cards, id, name, setCards }: Props) {
                             :
                             <h3 className={`font-semibold`}>{name}</h3>
                     }
-                    {
+                    <ColumnActions column={{
+                        id, menuId, name
+                    }} />
+                    
+                    {/* {
                         editName ? <button onClick={() => setEditName(false)}>
                             <Save className='size-4 text-primary' />
                         </button>
@@ -134,7 +139,7 @@ export default function Column({  cards, id, name, setCards }: Props) {
                             <button onClick={() => setEditName(true)}>
                                 <Pen className='size-4' />
                             </button>
-                    }
+                    } */}
                 </div>
                 <div
                     onDragOver={handleDragOver}
