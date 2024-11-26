@@ -128,9 +128,9 @@ export default function Column({  cards, id, name, setCards }: Props) {
                     }
                 </div>
                 <div
-                    onDragOver={handleDragOver}
-                    onDragLeave={handleDragLeave}
-                    onDrop={handleDragEnd}
+                    // onDragOver={handleDragOver}
+                    // onDragLeave={handleDragLeave}
+                    // onDrop={handleDragEnd}
                     className={cn('w-full h-full transition-colors rounded-sm', !name && "mt-10",)}>
                     {
                         filteredCards.map((item) => (

@@ -7,6 +7,7 @@ import { Column as ColumnType, MenuItem } from '@/utils/types'
 import Column from './column'
 import { useQuery } from '@tanstack/react-query'
 import kyInstance from '@/lib/ky-instance'
+import { useDeleteItemMutation } from '../[menuId]/muration'
 
 type Props = {
     columns: Array<ColumnType>,
@@ -40,10 +41,12 @@ export default function Board({ columns, menuId }: Props) {
     )
 }
 
-function DeleteZone({ setCards, className }: {
-    setCards: React.Dispatch<React.SetStateAction<Array<MenuItemValues>>>,
+function DeleteZone({ className }: {
     className?: string
 }) {
+
+    const mutation = useDeleteItemMutation();
+
     const [active, setActive] = useState(false)
     const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
         e.preventDefault()
@@ -53,11 +56,16 @@ function DeleteZone({ setCards, className }: {
     const handleDragLeave = () => {
         setActive(false)
     }
-    const onDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    const onDrop = async (e: React.DragEvent<HTMLDivElement>) => {
         e.preventDefault()
         const id = parseInt(e.dataTransfer.getData("cardId"));
-        setCards((prev) => prev.filter((item) => item.id !== id))
-        setActive(false)
+        if(id === undefined) return
+        mutation.mutate(id, {
+            onSettled(data, error, variables, context) {
+                console.error(error)
+                setActive(false)
+            },
+        })
 
     }
     return <div onDragOver={handleDragOver} onDrop={onDrop} onDragLeave={handleDragLeave} className={cn('w-60 h-52 flex justify-center items-center shrink-0 mt-10 rounded-sm ', active ? "bg-red-500/20 border border-red-800/50" : "bg-neutral-100 border-neutral-800/70", className)}>

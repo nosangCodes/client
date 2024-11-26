@@ -1,5 +1,6 @@
 import { toast } from "@/hooks/use-toast";
 import kyInstance from "@/lib/ky-instance";
+import { menuItem } from "@/lib/validations";
 import { Column, CreateColumn, CreateMenuItem, MenuItem } from "@/utils/types";
 import { QueryFilters, useMutation, useQueryClient } from "@tanstack/react-query";
 
@@ -90,5 +91,43 @@ export function useAddColumnMutation(){
           },
     })
     
+    return mutation
+}
+
+export function useDeleteItemMutation(){
+    const queryClient = useQueryClient();
+    const mutation = useMutation({
+        mutationKey: ["menu-items"],
+        mutationFn: (itemId: number) => kyInstance.delete(`api/business/item/${itemId}`).json<{
+            id: number
+        }>(),
+        onSuccess: async ({id}) => {
+            const queryFilter = {
+                queryKey: ["menu-items"],
+            } satisfies QueryFilters
+            
+            await queryClient.cancelQueries(queryFilter);
+            queryClient.setQueriesData<Array<MenuItem>>(queryFilter, (oldData) => {
+                if(oldData){
+                    oldData = oldData.filter((item) => item.itemId !== id)
+                    return [
+                        ...oldData
+                    ]
+                }
+            })
+
+            queryClient.invalidateQueries({
+                queryKey: ["menu-items"],
+                exact: true, // Only invalidate the specific "albums" query
+              });
+        },
+        onError: (error) => {
+            console.error("Error deleting item", error); // Helpful for debugging
+            toast({
+              variant: "destructive",
+              description: "Failed to delete item, please try again.",
+            });
+          },
+    })
     return mutation
 }

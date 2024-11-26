@@ -21,9 +21,8 @@ type Props = {
     column: string
     open: boolean,
     onClose: () => void,
-    setCards: React.Dispatch<React.SetStateAction<Array<MenuItemValues>>>
 }
-export default function AddItem({ columnId,column, setCards, onClose, open }: Props) {
+export default function AddItem({ columnId, column, onClose, open }: Props) {
     const form = useForm({
         resolver: zodResolver(createMenuItem),
         defaultValues: {
