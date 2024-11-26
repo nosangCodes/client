@@ -7,6 +7,7 @@ import { Pen, Plus, Save } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Input } from '@/components/ui/input'
 import {Column as ColumnType, MenuItem} from "@/utils/types"
+import { useMoveItemMutation } from '../[menuId]/muration'
 
 type Props = {
     cards: Array<MenuItem>
@@ -17,6 +18,7 @@ export default function Column({  cards, id, name, setCards }: Props) {
     const [openAddModal, setOpenAddModal] = useState(false)
     const [editName, setEditName] = useState(false)
     const [active, setActive] = useState(false)
+    const mutation = useMoveItemMutation();
 
     const filteredCards = cards.filter((card) => card.columnId === id)
 
@@ -29,7 +31,7 @@ export default function Column({  cards, id, name, setCards }: Props) {
     }
     const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
         e.preventDefault()
-        highlightIndicator(e)
+        // highlightIndicator(e)
         setActive(true)
     }
 
@@ -44,13 +46,13 @@ export default function Column({  cards, id, name, setCards }: Props) {
     function clearHighlights(els?: HTMLElement[]) {
         const indicators = els || getIndicators();
         indicators.forEach((indicator) => {
-            indicator.classList.add("opacity-0")
             indicator.classList.remove("opacity-100")
+            indicator.classList.add("opacity-0")
         })
     }
 
     function getIndicators() {
-        return Array.from(document.querySelectorAll(`[data-column=${column}]`)) as HTMLElement[]
+        return Array.from(document.querySelectorAll(`[data-column=${id}]`)) as HTMLElement[]
     }
 
     function getNearestIndicators(e: React.DragEvent<HTMLDivElement>, indicators: HTMLElement[]) {
@@ -76,34 +78,45 @@ export default function Column({  cards, id, name, setCards }: Props) {
 
     const handleDragLeave = () => {
         setActive(false)
-        clearHighlights()
+        // clearHighlights()
     }
     const handleDragEnd = (e: React.DragEvent<HTMLDivElement>) => {
         setActive(false)
-        clearHighlights()
+        // clearHighlights()
         const cardId = e.dataTransfer.getData("cardId")
-        const indicators = getIndicators();
-        const { element, offset } = getNearestIndicators(e, indicators)
-        const before = element.dataset.before || "-1"
+        // const indicators = getIndicators();
+        // const { element } = getNearestIndicators(e, indicators)
+        // const before = element.dataset.before || "-1"
 
-        if (before !== cardId) {
-            let copy = [...cards];
-            let cardToTransfer = copy.find((c) => c.id === Number(cardId))
-            if (!cardToTransfer) return
+        mutation.mutate({
+            columnIdToMoveTo: id,
+            itemIdToMove: parseInt(cardId),
+        }, {
+            onSuccess: () => {
 
-            cardToTransfer = { ...cardToTransfer, column }
-            copy = copy.filter((cp) => cp.id !== Number(cardId))
-
-            const moveToBack = before === "-1"
-            if (moveToBack) {
-                copy.push(cardToTransfer)
-            } else {
-                const insertAtIndex = copy.findIndex((cp) => cp.id == Number(before))
-                if (insertAtIndex === undefined) return
-                copy.splice(insertAtIndex, 0, cardToTransfer);
             }
-            setCards(copy)
-        }
+        })
+
+        // if (before !== cardId) {
+            // let copy = [...cards];
+            // let cardToTransfer = copy.find((c) => c.itemId === Number(cardId))
+            // if (!cardToTransfer) return
+
+            // cardToTransfer = { ...cardToTransfer, columnId: id }
+            // copy = copy.filter((cp) => cp.itemId !== Number(cardId))
+
+            // const moveToBack = before === "-1"
+            // if (moveToBack) {
+            //     copy.push(cardToTransfer)
+            // } else {
+            //     const insertAtIndex = copy.findIndex((cp) => cp.itemId == Number(before))
+            //     if (insertAtIndex === undefined) return
+            //     copy.splice(insertAtIndex, 0, cardToTransfer);
+            // }
+
+            
+            // setCards(copy)
+        // }
     }
     return (
         <>
@@ -128,16 +141,16 @@ export default function Column({  cards, id, name, setCards }: Props) {
                     }
                 </div>
                 <div
-                    // onDragOver={handleDragOver}
-                    // onDragLeave={handleDragLeave}
-                    // onDrop={handleDragEnd}
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleDragEnd}
                     className={cn('w-full h-full transition-colors rounded-sm', !name && "mt-10",)}>
                     {
                         filteredCards.map((item) => (
                             <Card key={item.itemId} {...item} handleDragStart={handleDragStart} />
                         ))
                     }
-                    <DropIndicator beforeId={-1} column={String(id)} />
+                    <DropIndicator beforeId={-1} column={id} />
                     <motion.button onClick={() => setOpenAddModal(true)} layout className='flex items-center my-2 gap-0.5 text-neutral-900/80 hover:text-neutral-900 text-sm'><span>Add Item</span> <Plus className='size-4' /></motion.button>
                 </div>
             </div>
@@ -149,7 +162,7 @@ function Card({ columnId, itemId, itemDescription, itemName, itemPrice, handleDr
     handleDragStart: (e: React.DragEvent<HTMLDivElement> | MouseEvent | TouchEvent | PointerEvent, cardId: number) => void
 }) {
     return <>
-        <DropIndicator beforeId={itemId} column={String(columnId)} />
+        <DropIndicator beforeId={itemId} column={columnId} />
         <motion.div layout layoutId={String(itemId)} draggable={true} onDragStart={(event) => handleDragStart(event, itemId)} className='cursor-grab active:cursor-grabbing rounded-sm p-3 border border-neutral-400 bg-white'>
             <p className='text-sm font-semibold text-neutral-900'>{itemName}</p>
             <p className='text-xs mt-0.5'>{itemDescription}</p>
@@ -160,7 +173,7 @@ function Card({ columnId, itemId, itemDescription, itemName, itemPrice, handleDr
 
 function DropIndicator({ beforeId, column }: {
     beforeId: number,
-    column: string
+    column: number
 }) {
     return (
         <div data-before={beforeId || "-1"} data-column={column} className='my-0.5 h-0.5 w-full bg-violet-500 opacity-0' />

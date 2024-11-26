@@ -131,3 +131,49 @@ export function useDeleteItemMutation(){
     })
     return mutation
 }
+
+export function useMoveItemMutation(){
+    const queryClient = useQueryClient();
+    const mutation = useMutation({
+        mutationKey: ["menu-items"],
+        mutationFn: ( {columnIdToMoveTo, itemIdToMove}:{itemIdToMove: number, columnIdToMoveTo: number}) => kyInstance.patch("api/business/move-item", {
+            headers: {
+                'content-type': 'application/json'
+              },
+              json: {
+                itemId: itemIdToMove,
+                columnId: columnIdToMoveTo
+              }
+        }).json<MenuItem>(),
+        onSuccess: async(updatedItem) => {
+            const queryFilter = {
+                queryKey: ["menu-items"],
+            } satisfies QueryFilters
+            
+            await queryClient.cancelQueries(queryFilter);
+
+            queryClient.setQueriesData<Array<MenuItem>>(queryFilter, (oldData) => {
+                if(oldData){
+                    const update = oldData.filter((item) => item.itemId !== updatedItem.itemId)
+                    update.push(updatedItem)
+                    return [
+                        ...update
+                    ]
+                }
+            })
+            queryClient.invalidateQueries({
+                queryKey: ["menu-items"],
+                exact: true, // Only invalidate the specific "albums" query
+              });
+        },
+        onError: (error) => {
+            console.error("Error moving item", error); // Helpful for debugging
+            toast({
+              variant: "destructive",
+              description: "Failed to move item, please try again.",
+            });
+          },
+    })
+
+    return mutation
+}
